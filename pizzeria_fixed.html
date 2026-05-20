@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pizzeria | بيتزيريا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0a08;--surface:#131110;--card:#1c1815;
+  --red:#e8341c;--red2:#b5240e;--orange:#f5762a;
+  --cream:#f5e9d3;--muted:#8a7a6b;--border:rgba(255,255,255,.08);
+  --fen:'DM Sans',sans-serif;--far:'Cairo',sans-serif;
+  --fh:'Playfair Display',serif;--fa:'Bebas Neue',sans-serif;
+  --r:16px;--tr:.35s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--cream);font-family:var(--far);overflow-x:hidden;cursor:default}
+html[lang=ar] body{font-family:var(--far);direction:rtl}
+a{color:inherit;text-decoration:none}
+img{display:block;width:100%;height:100%;object-fit:cover}
+ul{list-style:none}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+input,textarea{font-family:inherit}
+
+/* NOISE */
+#noise{position:fixed;inset:0;pointer-events:none;z-index:8000;opacity:.04;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* PRELOADER */
+#preloader{position:fixed;inset:0;z-index:9500;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;transition:opacity .9s,visibility .9s}
+#preloader.gone{opacity:0;visibility:hidden;pointer-events:none}
+.pre-logo{font-family:var(--fa);font-size:clamp(56px,14vw,110px);letter-spacing:.08em;line-height:1}
+.pre-logo span{color:var(--red)}
+.pre-ar{font-family:var(--far);font-size:17px;color:var(--muted)}
+.pre-track{width:210px;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.pre-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--red),var(--orange));transition:width .08s linear}
+
+
+/* NAV */
+#nav{position:fixed;top:0;left:0;right:0;z-index:600;padding:20px 5vw;display:flex;align-items:center;justify-content:space-between;transition:background .4s,backdrop-filter .4s,border .4s}
+#nav.stuck{background:rgba(13,10,8,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.n-logo{font-family:var(--fa);font-size:26px;letter-spacing:.1em}
+.n-logo span{color:var(--red)}
+.n-links{display:flex;gap:28px}
+.n-links a{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);transition:color .2s}
+html[lang=ar] .n-links a{letter-spacing:0;font-size:13px;text-transform:none}
+.n-links a:hover{color:var(--cream)}
+.n-right{display:flex;align-items:center;gap:12px}
+.cart-btn{position:relative;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:border-color var(--tr),background var(--tr)}
+.cart-btn:hover{border-color:var(--red);background:rgba(232,52,28,.1)}
+.cart-btn svg{width:19px;height:19px;stroke:var(--cream);stroke-width:2;fill:none}
+#cc{position:absolute;top:-4px;right:-4px;width:18px;height:18px;background:var(--red);border-radius:50%;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;color:#fff}
+#cc.on{display:flex}
+.ham{display:none;flex-direction:column;gap:5px;padding:4px}
+.ham span{display:block;height:2px;width:24px;background:var(--cream);border-radius:2px}
+
+/* MOBILE NAV */
+#mob-nav{position:fixed;inset:0;background:var(--bg);z-index:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;transform:translateX(-100%);transition:transform .4s cubic-bezier(.4,0,.2,1)}
+html[lang=ar] #mob-nav{transform:translateX(100%)}
+#mob-nav.open{transform:none!important}
+#mob-nav a{font-family:var(--fh);font-size:clamp(26px,6vw,46px);font-weight:900}
+html[lang=ar] #mob-nav a{font-family:var(--far);font-weight:700}
+#mob-x{position:absolute;top:24px;right:5vw;font-size:26px;color:var(--muted);background:none;border:none}
+html[lang=ar] #mob-x{right:auto;left:5vw}
+
+/* HERO */
+#hero{position:relative;height:100vh;min-height:640px;display:flex;align-items:center;overflow:hidden}
+#hero-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+#hero-over{position:absolute;inset:0;background:linear-gradient(135deg,rgba(13,10,8,.92) 40%,rgba(13,10,8,.5))}
+.hero-in{position:relative;z-index:2;padding:0 5vw;max-width:700px}
+.h-pill{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:22px;opacity:0;animation:fup .8s .3s forwards}
+.h-pill::before{content:'';width:26px;height:1px;background:var(--red)}
+html[lang=ar] .h-pill{flex-direction:row-reverse}
+html[lang=ar] .h-pill::before{display:none}
+html[lang=ar] .h-pill::after{content:'';width:26px;height:1px;background:var(--red)}
+.h-title{font-family:var(--fh);font-size:clamp(40px,5.5vw,78px);line-height:1.08;font-weight:900;margin-bottom:22px;opacity:0;animation:fup .8s .5s forwards}
+html[lang=ar] .h-title{font-family:var(--far);font-weight:900;line-height:1.35}
+.h-title em{font-style:italic;color:var(--red)}
+html[lang=ar] .h-title em{font-style:normal}
+.h-desc{font-size:15px;line-height:1.85;color:var(--muted);margin-bottom:34px;opacity:0;animation:fup .8s .7s forwards;max-width:520px}
+.h-ctas{display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:fup .8s .9s forwards}
+.btn-r{display:inline-flex;align-items:center;gap:10px;padding:14px 30px;background:var(--red);color:#fff;border-radius:50px;font-size:14px;font-weight:600;transition:background .2s,transform .2s,box-shadow .2s}
+.btn-r:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 12px 36px rgba(232,52,28,.35)}
+.btn-g{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--muted);transition:color .2s}
+.btn-g:hover{color:var(--cream)}
+.h-stats{display:flex;gap:36px;margin-top:44px;opacity:0;animation:fup .8s 1.1s forwards}
+.hs-n{font-family:var(--fa);font-size:36px;line-height:1}
+html[lang=ar] .hs-n{font-family:var(--far);font-weight:900;font-size:28px}
+.hs-l{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* SECTIONS */
+.sec{padding:100px 5vw}
+.sh{text-align:center;margin-bottom:56px}
+.s-tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+.s-tag::before,.s-tag::after{content:'';width:18px;height:1px;background:var(--red)}
+html[lang=ar] .s-tag{flex-direction:row-reverse;letter-spacing:0}
+.s-ttl{font-family:var(--fh);font-size:clamp(32px,4vw,54px);font-weight:900;line-height:1.1}
+html[lang=ar] .s-ttl{font-family:var(--far);font-weight:900;line-height:1.35}
+.s-ttl em{font-style:italic;color:var(--red)}
+html[lang=ar] .s-ttl em{font-style:normal}
+.s-sub{color:var(--muted);max-width:460px;margin:12px auto 0;line-height:1.85;font-size:15px}
+
+/* OFFERS */
+.off-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.off-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:24px;display:flex;gap:16px;align-items:center;transition:transform var(--tr),border-color var(--tr)}
+.off-card:hover{transform:translateY(-4px);border-color:rgba(232,52,28,.3)}
+.off-ico{width:58px;height:58px;border-radius:12px;background:rgba(232,52,28,.12);overflow:hidden;flex-shrink:0}
+.off-badge{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:30px;margin-bottom:6px}
+.off-name{font-weight:600;font-size:14px;margin-bottom:4px}
+.off-price{color:var(--muted);font-size:13px}
+.off-price strong{color:var(--orange);font-size:16px}
+
+/* FLAVORS */
+.flav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:26px}
+.flav-card{border-radius:var(--r);overflow:hidden;background:var(--card);border:1px solid var(--border);transition:transform var(--tr),box-shadow var(--tr)}
+.flav-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.flav-img{height:200px;overflow:hidden;position:relative}
+.flav-img img{transition:transform .6s var(--tr);width:100%;height:100%;object-fit:cover}
+.flav-card:hover .flav-img img{transform:scale(1.07)}
+.flav-over{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,10,8,.8),transparent 55%)}
+.flav-badge{position:absolute;top:12px;left:12px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.05em}
+html[lang=ar] .flav-badge{left:auto;right:12px}
+.flav-badge.pop{background:rgba(245,118,42,.9);color:#fff}
+.flav-badge.spicy{background:rgba(232,52,28,.9);color:#fff}
+.flav-badge.veg{background:rgba(72,187,120,.9);color:#fff}
+.flav-body{padding:18px}
+.flav-name{font-weight:700;font-size:16px;margin-bottom:6px}
+.flav-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.flav-foot{display:flex;align-items:center;justify-content:space-between}
+.flav-price{font-family:var(--fa);font-size:20px;color:var(--orange)}
+html[lang=ar] .flav-price{font-family:var(--far);font-weight:700;font-size:17px}
+.flav-cur{font-size:10px;color:var(--muted)}
+.add-btn{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;transition:background .2s,transform .2s;flex-shrink:0}
+.add-btn:hover{background:var(--red2);transform:scale(1.12)}
+
+/* MENU */
+.tab-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.tab{padding:10px 24px;border-radius:50px;border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--muted);transition:background .2s,color .2s,border-color .2s}
+.tab.on,.tab:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+.m-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform var(--tr),box-shadow var(--tr)}
+.m-card:hover{transform:translateY(-5px);box-shadow:0 20px 55px rgba(0,0,0,.45)}
+.m-img{height:160px;overflow:hidden}
+.m-img img{transition:transform .6s;width:100%;height:100%;object-fit:cover}
+.m-card:hover .m-img img{transform:scale(1.08)}
+.m-body{padding:16px}
+.m-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:8px}
+.m-tag.pop{background:rgba(245,118,42,.2);color:var(--orange)}
+.m-tag.spicy{background:rgba(232,52,28,.2);color:var(--red)}
+.m-tag.veg{background:rgba(72,187,120,.2);color:#48bb78}
+.m-name{font-weight:600;font-size:14px;margin-bottom:5px}
+.m-desc{font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:12px}
+.m-foot{display:flex;align-items:center;justify-content:space-between}
+.m-price{font-family:var(--fa);font-size:18px;color:var(--orange)}
+html[lang=ar] .m-price{font-family:var(--far);font-weight:700;font-size:15px}
+
+/* GALLERY */
+#gallery{overflow:hidden}
+.gal-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:220px;gap:10px}
+.g-item{border-radius:12px;overflow:hidden;position:relative}
+.g-item:nth-child(1){grid-column:1/3}
+.g-item:nth-child(4){grid-column:3/4;grid-row:1/3}
+.g-item:nth-child(8){grid-column:1/3}
+.g-item img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--tr)}
+.g-item:hover img{transform:scale(1.06)}
+.g-dark{position:absolute;inset:0;background:rgba(13,10,8,.25);opacity:0;transition:opacity .3s}
+.g-item:hover .g-dark{opacity:1}
+
+/* ABOUT */
+#about{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;padding:120px 5vw;background:var(--surface)}
+.ab-visual{position:relative}
+.ab-img{border-radius:24px;overflow:hidden;height:500px}
+.ab-img img{width:100%;height:100%;object-fit:cover}
+.ab-float{position:absolute;bottom:-18px;right:-18px;background:var(--red);border-radius:14px;padding:16px 20px;color:#fff}
+html[lang=ar] .ab-float{right:auto;left:-18px}
+.ab-fn{font-family:var(--fa);font-size:36px;line-height:1}
+html[lang=ar] .ab-fn{font-family:var(--far);font-weight:900;font-size:28px}
+.ab-ft{font-size:11px;opacity:.8;margin-top:3px}
+.ab-content .sh{text-align:left}
+html[lang=ar] .ab-content .sh{text-align:right}
+.ab-content .s-tag{justify-content:flex-start}
+html[lang=ar] .ab-content .s-tag{justify-content:flex-end}
+.ab-content .s-sub{margin-left:0;text-align:left}
+html[lang=ar] .ab-content .s-sub{margin-left:auto;margin-right:0;text-align:right}
+.ab-list{margin-top:26px;display:flex;flex-direction:column;gap:16px}
+.ab-item{display:flex;gap:14px;align-items:flex-start}
+html[lang=ar] .ab-item{flex-direction:row-reverse}
+.ab-ico{width:42px;height:42px;border-radius:10px;background:rgba(232,52,28,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;margin-top:2px}
+.ab-it{font-weight:600;margin-bottom:3px;font-size:14px}
+.ab-id{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* GOOGLE REVIEWS */
+.rev-banner{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.rev-score{font-family:var(--fa);font-size:60px;color:var(--cream);line-height:1}
+html[lang=ar] .rev-score{font-family:var(--far);font-weight:900}
+.rev-stars-big{display:flex;gap:3px;font-size:24px;color:#FBBC04;margin-bottom:4px}
+.rev-cnt{font-size:13px;color:var(--muted)}
+.g-badge{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:50px;padding:8px 18px;font-size:13px;font-weight:600}
+.g-badge svg{width:18px;height:18px}
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-top:36px}
+.rev-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;transition:transform var(--tr)}
+.rev-card:hover{transform:translateY(-4px)}
+.rev-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+html[lang=ar] .rev-top{flex-direction:row-reverse}
+.rev-av{width:42px;height:42px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;flex-shrink:0}
+.rev-name{font-weight:600;font-size:14px}
+.rev-date{font-size:11px;color:var(--muted);margin-top:2px}
+.rev-gl{margin-left:auto}
+html[lang=ar] .rev-gl{margin-left:0;margin-right:auto}
+.rev-stars{color:#FBBC04;font-size:13px;margin-bottom:9px;letter-spacing:2px}
+.rev-txt{font-size:13px;color:var(--muted);line-height:1.8;font-style:italic}
+
+/* MAP */
+.map-wrap{border-radius:22px;overflow:hidden;border:1px solid var(--border);height:400px}
+.map-wrap iframe{width:100%;height:100%;border:none}
+.map-open-btn{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:12px 26px;background:var(--card);border:1px solid var(--border);border-radius:50px;font-size:13px;font-weight:600;transition:background .2s,border-color .2s,transform .2s}
+.map-open-btn:hover{background:var(--red);border-color:var(--red);transform:translateY(-2px)}
+.map-open-btn svg{width:16px;height:16px;fill:currentColor}
+.map-meta{display:flex;gap:28px;margin-top:22px;flex-wrap:wrap}
+.map-mi{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.map-mi span:first-child{font-size:18px}
+
+/* CONTACT */
+#contact{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;padding:120px 5vw;background:var(--surface)}
+.ct-info .sh{text-align:left}
+html[lang=ar] .ct-info .sh{text-align:right}
+.ct-info .s-tag{justify-content:flex-start}
+html[lang=ar] .ct-info .s-tag{justify-content:flex-end}
+.ct-items{margin-top:26px;display:flex;flex-direction:column;gap:18px}
+.ct-item{display:flex;gap:12px;align-items:center}
+html[lang=ar] .ct-item{flex-direction:row-reverse;text-align:right}
+.ct-ico{width:44px;height:44px;border-radius:10px;background:rgba(232,52,28,.12);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.ct-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+html[lang=ar] .ct-lbl{letter-spacing:0}
+.ct-val{font-weight:600;font-size:14px}
+.ct-form{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:34px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+html[lang=ar] .fg label{letter-spacing:0;font-size:12px}
+.fg input,.fg textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--cream);font-size:14px;transition:border-color .2s;outline:none}
+.fg input:focus,.fg textarea:focus{border-color:var(--red)}
+.fg textarea{height:105px;resize:none}
+.send-btn{width:100%;padding:14px;background:var(--red);color:#fff;border-radius:50px;font-size:14px;font-weight:600;transition:background .2s,transform .2s}
+.send-btn:hover{background:var(--red2);transform:translateY(-2px)}
+
+/* CART */
+#cart-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:800;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;backdrop-filter:blur(4px)}
+#cart-ov.on{opacity:1;visibility:visible}
+#cart-drw{position:fixed;top:0;right:0;width:min(430px,100vw);height:100dvh;background:var(--surface);border-left:1px solid var(--border);z-index:801;transform:translateX(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+html[lang=ar] #cart-drw{right:auto;left:0;border-left:none;border-right:1px solid var(--border);transform:translateX(-100%)}
+#cart-drw.on{transform:none}
+.cd-head{padding:24px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cd-head h2{font-family:var(--fh);font-size:20px}
+html[lang=ar] .cd-head h2{font-family:var(--far);font-weight:700}
+.cd-x{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--muted);transition:background .2s,color .2s}
+.cd-x:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.cd-list{flex:1;overflow-y:auto;padding:16px 22px;display:flex;flex-direction:column;gap:12px}
+.cd-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:14px}
+.cd-empty-ico{font-size:44px;opacity:.35}
+.cd-item{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
+html[lang=ar] .cd-item{flex-direction:row-reverse}
+.cd-thumb{width:54px;height:54px;border-radius:9px;overflow:hidden;flex-shrink:0}
+.cd-thumb img{width:100%;height:100%;object-fit:cover}
+.cd-info{flex:1}
+.cd-name{font-weight:600;font-size:13px;margin-bottom:2px}
+.cd-price{font-size:12px;color:var(--orange)}
+.cd-qty{display:flex;align-items:center;gap:8px;margin-top:7px}
+.qb{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;transition:background .2s}
+.qb:hover{background:var(--red);border-color:var(--red)}
+.qv{font-weight:700;font-size:13px;min-width:18px;text-align:center}
+.cd-rm{color:var(--muted);font-size:16px;transition:color .2s}
+.cd-rm:hover{color:var(--red)}
+.cd-foot{padding:16px 22px 24px;border-top:1px solid var(--border)}
+.cd-tot{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+.cd-tot span:first-child{font-size:13px;color:var(--muted)}
+.cd-tot span:last-child{font-family:var(--fa);font-size:24px;color:var(--orange)}
+html[lang=ar] .cd-tot span:last-child{font-family:var(--far);font-weight:700;font-size:18px}
+.wa-btn{width:100%;padding:14px;background:#25d366;color:#fff;border-radius:50px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s,transform .2s}
+.wa-btn:hover{background:#1da851;transform:translateY(-2px)}
+.wa-btn svg{width:20px;height:20px;fill:#fff}
+
+/* FLY — removed */
+
+/* TOAST */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:10px;z-index:1000;opacity:0;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .4s;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast-ico{width:32px;height:32px;border-radius:50%;background:rgba(72,187,120,.15);display:flex;align-items:center;justify-content:center;font-size:16px}
+#toast-txt{font-size:13px;font-weight:500}
+
+/* FOOTER */
+footer{background:var(--surface);border-top:1px solid var(--border);padding:76px 5vw 36px}
+.ft-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:52px;margin-bottom:52px}
+.ft-brand p{font-size:13px;color:var(--muted);line-height:1.85;max-width:260px;margin-top:12px}
+.ft-socials{display:flex;gap:9px;margin-top:20px}
+.s-ico{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .2s,border-color .2s}
+.s-ico:hover{background:var(--red);border-color:var(--red)}
+.ft-col h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+html[lang=ar] .ft-col h4{letter-spacing:0;font-size:13px}
+.ft-col ul{display:flex;flex-direction:column;gap:9px}
+.ft-col a{font-size:13px;color:var(--muted);transition:color .2s}
+.ft-col a:hover{color:var(--cream)}
+.ft-bot{border-top:1px solid var(--border);padding-top:20px;display:flex;align-items:center;justify-content:space-between}
+.ft-bot p{font-size:12px;color:var(--muted)}
+
+/* WA FLOAT */
+#wa-float{position:fixed;bottom:26px;right:26px;z-index:500;width:54px;height:54px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,211,102,.4);transition:transform .2s;animation:pulse 2.5s infinite}
+html[lang=ar] #wa-float{right:auto;left:26px}
+#wa-float:hover{transform:scale(1.12)}
+#wa-float svg{width:27px;height:27px;fill:#fff}
+
+/* SCROLL REVEAL */
+.rv{opacity:0;transform:translateY(34px);transition:opacity .7s,transform .7s}
+.rv.vis{opacity:1;transform:none}
+
+@keyframes fup{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(37,211,102,.4)}50%{box-shadow:0 8px 40px rgba(37,211,102,.65)}}
+
+/* RESPONSIVE */
+@media(max-width:960px){
+  #about,#contact{grid-template-columns:1fr;gap:48px;padding:80px 5vw}
+  .ft-grid{grid-template-columns:1fr 1fr;gap:36px}
+  .n-links{display:none}
+  .ham{display:flex}
+  .gal-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:180px}
+  .g-item:nth-child(1),.g-item:nth-child(4),.g-item:nth-child(8){grid-column:auto}
+}
+@media(max-width:600px){
+  .ft-grid{grid-template-columns:1fr}
+  .ft-bot{flex-direction:column;gap:10px;text-align:center}
+  .gal-grid{grid-template-columns:1fr}
+  .h-stats{gap:20px}
+  .sec{padding:80px 5vw}
+}
+</style>
+</head>
+<body>
+
+<div id="noise"></div>
+
+<!-- PRELOADER -->
+<div id="preloader">
+  <div class="pre-logo">PIZZE<span>RIA</span></div>
+  <div class="pre-ar">بيتزيريا — مصنوع بحب</div>
+  <div class="pre-track"><div class="pre-fill" id="pfill"></div></div>
+</div>
+
+
+<!-- WA FLOAT -->
+<a id="wa-float" href="https://wa.me/201276818198" target="_blank" rel="noopener">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<!-- CART OVERLAY -->
+<div id="cart-ov" onclick="closeCart()"></div>
+
+<!-- CART DRAWER -->
+<div id="cart-drw">
+  <div class="cd-head">
+    <h2 id="cd-title">طلبك</h2>
+    <button class="cd-x" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cd-list" id="cd-list"></div>
+  <div class="cd-foot" id="cd-foot" style="display:none">
+    <!-- Order summary inside cart -->
+    <div id="cd-summary" style="padding:0 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px"></div>
+    <div class="cd-tot">
+      <span id="cd-tot-lbl">الإجمالي</span>
+      <span id="cd-tot-val">EGP 0</span>
+    </div>
+    <button class="wa-btn" onclick="showOrderForm()">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <span id="wa-txt">إتمام الطلب</span>
+    </button>
+  </div>
+</div>
+
+<!-- ORDER INFO MODAL -->
+<div id="order-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:900;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px" onclick="if(event.target===this)closeOrderForm()">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:22px;width:min(480px,100%);max-height:92vh;overflow-y:auto;display:flex;flex-direction:column">
+
+    <!-- Modal header -->
+    <div style="padding:22px 26px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div style="font-family:var(--far);font-weight:700;font-size:18px">🍕 تفاصيل الطلب</div>
+      <button onclick="closeOrderForm()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);background:none;cursor:pointer;transition:background .2s,color .2s" onmouseover="this.style.background='var(--red)';this.style.color='#fff'" onmouseout="this.style.background='none';this.style.color='var(--muted)'">✕</button>
+    </div>
+
+    <div style="padding:18px 26px 26px;display:flex;flex-direction:column;gap:20px">
+
+      <!-- ① ORDER SUMMARY -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase">ملخص الطلب</div>
+        <div id="modal-order-items" style="padding:10px 16px;display:flex;flex-direction:column;gap:8px"></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--muted)">الإجمالي</span>
+          <span id="modal-total" style="font-family:var(--far);font-weight:700;font-size:18px;color:var(--orange)">EGP 0</span>
+        </div>
+      </div>
+
+      <!-- ② CUSTOMER INFO -->
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:12px">بيانات التوصيل</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px">الاسم الكامل <span style="color:var(--red)">*</span></label>
+              <input type="text" id="order-name" placeholder="اسمك" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--cream);font-size:13px;outline:none;font-family:var(--far);transition:border-color .2s" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor=''"/>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px">رقم الهاتف <span style="color:var(--red)">*</span></label>
+              <input type="tel" id="order-phone" placeholder="+20 1xx xxxx xxxx" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--cream);font-size:13px;outline:none;font-family:var(--far);transition:border-color .2s" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor=''"/>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px">العنوان <span style="color:var(--red)">*</span></label>
+            <input type="text" id="order-address" placeholder="الشارع، رقم المبنى، الطابق..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--cream);font-size:13px;outline:none;font-family:var(--far);transition:border-color .2s" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor=''"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:5px">المنطقة / المدينة <span style="color:var(--red)">*</span></label>
+            <input type="text" id="order-area" placeholder="مثال: وسط البلد، المعادي، مدينة نصر" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--cream);font-size:13px;outline:none;font-family:var(--far);transition:border-color .2s" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor=''"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ PAYMENT METHOD -->
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:12px">طريقة الدفع</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label id="pay-cash-lbl" style="display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--bg);border:2px solid var(--red);border-radius:12px;cursor:pointer;transition:all .2s">
+            <input type="radio" name="payment" value="cash" checked style="accent-color:var(--red)" onchange="highlightPayment()"/>
+            <span style="font-size:22px">💵</span>
+            <div>
+              <div style="font-weight:600;font-size:13px">كاش</div>
+              <div style="font-size:11px;color:var(--muted)">عند الاستلام</div>
+            </div>
+          </label>
+          <label id="pay-visa-lbl" style="display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--bg);border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s">
+            <input type="radio" name="payment" value="visa" style="accent-color:var(--red)" onchange="highlightPayment()"/>
+            <span style="font-size:22px">💳</span>
+            <div>
+              <div style="font-weight:600;font-size:13px">فيزا / كارت</div>
+              <div style="font-size:11px;color:var(--muted)">بطاقة ائتمان</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- ④ NOTES -->
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:12px">ملاحظات إضافية <span style="font-weight:400;text-transform:none;letter-spacing:0">(اختياري)</span></div>
+        <textarea id="order-notes" placeholder="أي طلبات خاصة، حساسية، تعليمات للتوصيل..." style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--cream);font-size:13px;outline:none;font-family:var(--far);height:80px;resize:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor=''"></textarea>
+      </div>
+
+      <!-- ⑤ ACTIONS -->
+      <div style="display:flex;gap:10px">
+        <button onclick="closeOrderForm()" style="flex:0 0 auto;padding:14px 20px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:50px;font-size:13px;font-weight:600;font-family:var(--far);cursor:pointer;transition:background .2s,color .2s" onmouseover="this.style.background='var(--border)';this.style.color='var(--cream)'" onmouseout="this.style.background='var(--bg)';this.style.color='var(--muted)'">إلغاء</button>
+        <button onclick="submitOrder()" id="submit-order-btn" style="flex:1;padding:14px;background:linear-gradient(135deg,#25d366,#1da851);color:#fff;border-radius:50px;font-size:14px;font-weight:700;font-family:var(--far);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .2s;border:none" onmouseover="this.style.transform='translateY(-2px)';this.style.opacity='.9'" onmouseout="this.style.transform='';this.style.opacity='1'">
+          <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#fff;flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          إرسال عبر واتساب
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <div id="toast-ico">✓</div>
+  <div id="toast-txt" data-en="Added to cart" data-ar="تمت الإضافة للسلة">تمت الإضافة للسلة</div>
+</div>
+
+<!-- MOBILE NAV -->
+<div id="mob-nav">
+  <button id="mob-x" onclick="closeMob()">✕</button>
+  <a href="#offers" onclick="closeMob()" data-en="Offers" data-ar="العروض">Offers</a>
+  <a href="#flavors" onclick="closeMob()" data-en="Flavors" data-ar="النكهات">Flavors</a>
+  <a href="#menu" onclick="closeMob()" data-en="Menu" data-ar="القائمة">Menu</a>
+  <a href="#gallery" onclick="closeMob()" data-en="Gallery" data-ar="الصور">Gallery</a>
+  <a href="#about" onclick="closeMob()" data-en="About" data-ar="عنّا">About</a>
+  <a href="#reviews" onclick="closeMob()" data-en="Reviews" data-ar="التقييمات">Reviews</a>
+  <a href="#map-sec" onclick="closeMob()" data-en="Location" data-ar="الموقع">Location</a>
+  <a href="#contact" onclick="closeMob()" data-en="Contact" data-ar="اتصل بنا">Contact</a>
+</div>
+
+<!-- NAVBAR -->
+<nav id="nav">
+  <a class="n-logo" href="#hero">PIZZE<span>RIA</span></a>
+  <div class="n-links">
+    <a href="#offers" data-en="Offers" data-ar="العروض">Offers</a>
+    <a href="#flavors" data-en="Flavors" data-ar="النكهات">Flavors</a>
+    <a href="#menu" data-en="Menu" data-ar="القائمة">Menu</a>
+    <a href="#gallery" data-en="Gallery" data-ar="الصور">Gallery</a>
+    <a href="#about" data-en="About" data-ar="عنّا">About</a>
+    <a href="#reviews" data-en="Reviews" data-ar="التقييمات">Reviews</a>
+    <a href="#map-sec" data-en="Location" data-ar="الموقع">Location</a>
+    <a href="#contact" data-en="Contact" data-ar="اتصل">Contact</a>
+  </div>
+  <div class="n-right">
+    <button class="cart-btn" onclick="openCart()">
+      <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <span id="cc">0</span>
+    </button>
+    <button class="ham" onclick="document.getElementById('mob-nav').classList.add('open')">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO (video bg) ═══════════ -->
+<section id="hero">
+  <video id="hero-vid" autoplay muted loop playsinline
+    poster="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1600&q=80">
+    <source src="https://cdn.pixabay.com/video/2022/10/08/134556-758888132_large.mp4" type="video/mp4"/>
+    <source src="https://cdn.pixabay.com/video/2017/01/01/7160-197634870_large.mp4" type="video/mp4"/>
+  </video>
+  <div id="hero-over"></div>
+  <div class="hero-in">
+    <div class="h-pill" data-en="Artisan Neapolitan Pizza" data-ar="بيتزا نابولي الأصيلة">Artisan Neapolitan Pizza</div>
+    <h1 class="h-title" data-en="Crafted with <em>Passion</em>,<br>Baked to <em>Perfection.</em>" data-ar="صُنع بـ<em>شغف</em>،<br>خُبز بـ<em>إتقان.</em>">Crafted with <em>Passion</em>,<br>Baked to <em>Perfection.</em></h1>
+    <p class="h-desc" data-en="Authentic wood-fired pizzas from hand-stretched dough, San Marzano tomatoes & the finest ingredients — delivered to your door." data-ar="بيتزا أصيلة من فرن الحطب — عجينة ممدودة يدوياً، طماطم سان مارزانو، ومكونات فاخرة تُوصَّل إلى بابك.">Authentic wood-fired pizzas from hand-stretched dough, San Marzano tomatoes & the finest ingredients — delivered to your door.</p>
+    <div class="h-ctas">
+      <a href="#flavors" class="btn-r" data-en="Order Now →" data-ar="اطلب الآن ←">Order Now →</a>
+      <a href="#about" class="btn-g" data-en="Our Story" data-ar="قصتنا">Our Story</a>
+    </div>
+    <div class="h-stats">
+      <div><div class="hs-n">12+</div><div class="hs-l" data-en="Years of craft" data-ar="سنوات خبرة">Years of craft</div></div>
+      <div><div class="hs-n">50K+</div><div class="hs-l" data-en="Happy customers" data-ar="عميل سعيد">Happy customers</div></div>
+      <div><div class="hs-n">4.9★</div><div class="hs-l" data-en="Google rating" data-ar="تقييم جوجل">Google rating</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ OFFERS ═══════════ -->
+<section id="offers" class="sec" style="background:var(--surface)">
+  <div class="sh rv">
+    <div class="s-tag" data-en="Limited Time" data-ar="عروض محدودة">Limited Time</div>
+    <h2 class="s-ttl" data-en="Today's <em>Hot</em> Offers" data-ar="عروض اليوم <em>الساخنة</em>">Today's <em>Hot</em> Offers</h2>
+    <p class="s-sub" data-en="Fresh deals every day — grab them before they're gone!" data-ar="عروض جديدة كل يوم — اغتنمها قبل أن تنتهي!">Fresh deals every day — grab them before they're gone!</p>
+  </div>
+  <div class="off-grid rv">
+    <div class="off-card"><div class="off-ico"><img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=200&q=80" alt=""/></div><div>
+      <div class="off-badge" data-en="30% OFF" data-ar="خصم 30%">خصم 30%</div>
+      <div class="off-name" data-en="Margherita Family Box" data-ar="صندوق مارغريتا العائلي">صندوق مارغريتا العائلي</div>
+      <div class="off-price" data-en="Was EGP 480 — Now <strong>EGP 336</strong>" data-ar="كان 480 ج — الآن <strong>336 ج</strong>">كان 480 ج — الآن <strong>336 ج</strong></div>
+    </div></div>
+    <div class="off-card"><div class="off-ico"><img src="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=200&q=80" alt=""/></div><div>
+      <div class="off-badge" data-en="FREE" data-ar="مجاناً">مجاناً</div>
+      <div class="off-name" data-en="Soft Drink with Any Large Pizza" data-ar="مشروب مجاني مع أي بيتزا كبيرة">مشروب مجاني مع أي بيتزا كبيرة</div>
+      <div class="off-price" data-en="Orders over <strong>EGP 350</strong>" data-ar="طلبات فوق <strong>350 ج</strong>">طلبات فوق <strong>350 ج</strong></div>
+    </div></div>
+    <div class="off-card"><div class="off-ico"><img src="https://images.unsplash.com/photo-1619881590738-a111d176d906?w=200&q=80" alt=""/></div><div>
+      <div class="off-badge" data-en="2-for-1" data-ar="اثنان بسعر واحد">اثنان بسعر واحد</div>
+      <div class="off-name" data-en="Garlic Knots Every Tuesday" data-ar="ثقوب الثوم كل ثلاثاء">ثقوب الثوم كل ثلاثاء</div>
+      <div class="off-price" data-en="Just <strong>EGP 69</strong>" data-ar="فقط <strong>69 ج</strong>">فقط <strong>69 ج</strong></div>
+    </div></div>
+    <div class="off-card"><div class="off-ico"><img src="https://images.unsplash.com/photo-1551024601-bec78aea704b?w=200&q=80" alt=""/></div><div>
+      <div class="off-badge" data-en="NEW" data-ar="جديد">جديد</div>
+      <div class="off-name" data-en="Nutella Calzone Dessert" data-ar="كالزوني نوتيلا للتحلية">كالزوني نوتيلا للتحلية</div>
+      <div class="off-price" data-en="Only <strong>EGP 129</strong>" data-ar="فقط <strong>129 ج</strong>">فقط <strong>129 ج</strong></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ═══════════ PIZZA FLAVORS ═══════════ -->
+<section id="flavors" class="sec">
+  <div class="sh rv">
+    <div class="s-tag" data-en="Signature Flavors" data-ar="نكهاتنا المميزة">Signature Flavors</div>
+    <h2 class="s-ttl" data-en="Our <em>Pizza</em> Collection" data-ar="مجموعة <em>البيتزا</em>">Our <em>Pizza</em> Collection</h2>
+    <p class="s-sub" data-en="Every pizza hand-stretched and wood-fired to order." data-ar="كل بيتزا تُمد يدوياً وتُخبز في فرن الحطب عند الطلب.">Every pizza hand-stretched and wood-fired to order.</p>
+  </div>
+  <div class="flav-grid rv" id="flav-grid"></div>
+</section>
+
+<!-- ═══════════ FULL MENU ═══════════ -->
+<section id="menu" class="sec" style="background:var(--surface)">
+  <div class="sh rv">
+    <div class="s-tag" data-en="Explore" data-ar="استكشف">Explore</div>
+    <h2 class="s-ttl" data-en="Full <em>Menu</em>" data-ar="القائمة <em>الكاملة</em>">Full <em>Menu</em></h2>
+    <p class="s-sub" data-en="From crispy starters to decadent desserts." data-ar="من المقبلات المقرمشة إلى الحلويات الفاخرة.">From crispy starters to decadent desserts.</p>
+  </div>
+  <div class="tab-bar rv" id="tab-bar"></div>
+  <div class="menu-grid" id="menu-grid"></div>
+</section>
+
+<!-- ═══════════ GALLERY (8 restaurant pics) ═══════════ -->
+<section id="gallery" class="sec">
+  <div class="sh rv">
+    <div class="s-tag" data-en="Our Place" data-ar="مطعمنا">Our Place</div>
+    <h2 class="s-ttl" data-en="Inside <em>Pizzeria</em>" data-ar="داخل <em>بيتزيريانا</em>">Inside <em>Pizzeria</em></h2>
+    <p class="s-sub" data-en="A warm, vibrant space where every table tells a story." data-ar="مكان دافئ وحيوي حيث كل طاولة تحكي قصة.">A warm, vibrant space where every table tells a story.</p>
+  </div>
+  <div class="gal-grid rv" id="gal-grid"></div>
+</section>
+
+<!-- ═══════════ ABOUT ═══════════ -->
+<section id="about">
+  <div class="ab-visual rv">
+    <div class="ab-img">
+      <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80" alt="Restaurant"/>
+    </div>
+    <div class="ab-float">
+      <div class="ab-fn" data-en="1992" data-ar="١٩٩٢">1992</div>
+      <div class="ab-ft" data-en="Since forever" data-ar="منذ البداية">Since forever</div>
+    </div>
+  </div>
+  <div class="ab-content">
+    <div class="sh rv">
+      <div class="s-tag" data-en="Our Story" data-ar="قصتنا">Our Story</div>
+      <h2 class="s-ttl" data-en="Born from <em>Love</em><br>of Real Pizza" data-ar="وُلد من <em>حب</em><br>البيتزا الحقيقية">Born from <em>Love</em><br>of Real Pizza</h2>
+      <p class="s-sub" data-en="Founded in Naples and reimagined for the modern table — authentic tradition in every bite." data-ar="تأسسنا في نابولي وأعدنا تصور البيتزا للمائدة الحديثة — تراث أصيل في كل لقمة.">Founded in Naples and reimagined for the modern table — authentic tradition in every bite.</p>
+    </div>
+    <div class="ab-list rv">
+      <div class="ab-item"><div class="ab-ico">🔥</div><div>
+        <div class="ab-it" data-en="Wood-fired ovens at 900°F" data-ar="أفران حطب تصل لـ 900°F">Wood-fired ovens at 900°F</div>
+        <div class="ab-id" data-en="Extreme heat for perfect char and a pillowy, airy crust." data-ar="حرارة شديدة لقشرة مثالية ومطاطة وخفيفة.">Extreme heat for perfect char and a pillowy, airy crust.</div>
+      </div></div>
+      <div class="ab-item"><div class="ab-ico">🌿</div><div>
+        <div class="ab-it" data-en="Local & seasonal ingredients" data-ar="مكونات محلية وموسمية">Local & seasonal ingredients</div>
+        <div class="ab-id" data-en="We partner with regional farms for the freshest produce every single week." data-ar="نتعاون مع مزارع محلية لأطازج المنتجات كل أسبوع.">We partner with regional farms for the freshest produce every single week.</div>
+      </div></div>
+      <div class="ab-item"><div class="ab-ico">👨‍🍳</div><div>
+        <div class="ab-it" data-en="Master pizzaiolos" data-ar="صانعو بيتزا محترفون">Master pizzaiolos</div>
+        <div class="ab-id" data-en="Our team trained in Naples — decades of combined expertise in every pie." data-ar="فريقنا تدرب في نابولي — عقود من الخبرة في كل قطعة.">Our team trained in Naples — decades of combined expertise in every pie.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ GOOGLE REVIEWS ═══════════ -->
+<section id="reviews" class="sec" style="background:var(--surface)">
+  <div class="sh rv">
+    <div class="s-tag" data-en="Google Reviews" data-ar="تقييمات جوجل">Google Reviews</div>
+    <h2 class="s-ttl" data-en="What Customers <em>Say</em>" data-ar="ماذا يقول <em>عملاؤنا</em>">What Customers <em>Say</em></h2>
+    <div class="rev-banner">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="rev-score">4.9</div>
+        <div>
+          <div class="rev-stars-big">★★★★★</div>
+          <div class="rev-cnt" data-en="2,847 Google reviews" data-ar="2,847 تقييم على جوجل">2,847 Google reviews</div>
+        </div>
+      </div>
+      <div class="g-badge">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        <span data-en="Verified on Google" data-ar="موثق على جوجل">Verified on Google</span>
+      </div>
+    </div>
+  </div>
+  <div class="rev-grid rv" id="rev-grid"></div>
+</section>
+
+<!-- ═══════════ MAP ═══════════ -->
+<section id="map-sec" class="sec">
+  <div class="sh rv">
+    <div class="s-tag" data-en="Find Us" data-ar="موقعنا">Find Us</div>
+    <h2 class="s-ttl" data-en="Visit Our <em>Pizzeria</em>" data-ar="زور <em>بيتزيريانا</em>">Visit Our <em>Pizzeria</em></h2>
+  </div>
+  <div class="rv">
+    <div class="map-wrap">
+      <iframe
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3453.8887879063!2d31.2357116!3d30.0444196!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x145840c7f328fe11%3A0x3f4f0b0b0b0b0b0b!2sTahrir%20Square%2C%20Cairo!5e0!3m2!1sen!2seg!4v1700000000000"
+        allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:16px">
+      <a class="map-open-btn" href="https://maps.google.com/?q=Tahrir+Square+Cairo+Egypt" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        <span data-en="Open in Google Maps" data-ar="افتح في خرائط جوجل">Open in Google Maps</span>
+      </a>
+    </div>
+    <div class="map-meta">
+      <div class="map-mi"><span>📍</span><span data-en="12 Via Napoli, Downtown Cairo" data-ar="١٢ فيا نابولي، وسط القاهرة">12 Via Napoli, Downtown Cairo</span></div>
+      <div class="map-mi"><span>🕐</span><span data-en="Open daily 11am – 11pm" data-ar="مفتوح يومياً ١١ص – ١١م">Open daily 11am – 11pm</span></div>
+      <div class="map-mi"><span>📞</span><span>+20 100 123 4567</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CONTACT ═══════════ -->
+<section id="contact">
+  <div class="ct-info">
+    <div class="sh rv">
+      <div class="s-tag" data-en="Get in Touch" data-ar="تواصل معنا">Get in Touch</div>
+      <h2 class="s-ttl" data-en="Order or <em>Enquire</em>" data-ar="اطلب أو <em>استفسر</em>">Order or <em>Enquire</em></h2>
+    </div>
+    <div class="ct-items rv">
+      <div class="ct-item"><div class="ct-ico">📍</div><div><div class="ct-lbl" data-en="Address" data-ar="العنوان">العنوان</div><div class="ct-val" data-en="12 Via Napoli, Downtown Cairo" data-ar="١٢ فيا نابولي، وسط القاهرة">١٢ فيا نابولي، وسط القاهرة</div></div></div>
+      <div class="ct-item"><div class="ct-ico">📞</div><div><div class="ct-lbl" data-en="Phone" data-ar="الهاتف">الهاتف</div><div class="ct-val">+20 127 681 8198</div></div></div>
+      <div class="ct-item"><div class="ct-ico">🕐</div><div><div class="ct-lbl" data-en="Hours" data-ar="ساعات العمل">ساعات العمل</div><div class="ct-val" data-en="Daily 11am – 11pm" data-ar="يومياً ١١ص – ١١م">يومياً ١١ص – ١١م</div></div></div>
+    </div>
+  </div>
+  <div class="ct-form rv">
+    <div class="fg"><label data-en="Your Name" data-ar="اسمك">اسمك</label><input type="text" id="contact-name" placeholder="أدخل اسمك"/></div>
+    <div class="fg"><label data-en="Phone" data-ar="الهاتف">الهاتف</label><input type="tel" id="contact-phone" placeholder="+20 1xx xxxx xxxx"/></div>
+    <div class="fg"><label data-en="Message" data-ar="الرسالة">الرسالة</label><textarea id="contact-message" placeholder="استفسارك أو طلبك…"></textarea></div>
+    <button class="send-btn" onclick="sendContactMessage()" data-en="Send Message" data-ar="إرسال الرسالة">إرسال الرسالة</button>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="ft-grid">
+    <div class="ft-brand">
+      <a class="n-logo" href="#hero">PIZZE<span>RIA</span></a>
+      <p data-en="Artisan Neapolitan pizza made with love, tradition & the finest ingredients since 1992." data-ar="بيتزا نابولي الأصيلة تُصنع بحب وتقاليد ومكونات فاخرة منذ ١٩٩٢.">Artisan Neapolitan pizza made with love, tradition & the finest ingredients since 1992.</p>
+      <div class="ft-socials">
+        <a class="s-ico" href="#" title="Instagram">📷</a>
+        <a class="s-ico" href="#" title="Facebook">👍</a>
+        <a class="s-ico" href="#" title="TikTok">🎵</a>
+        <a class="s-ico" href="https://wa.me/201276818198" title="WhatsApp">💬</a>
+      </div>
+    </div>
+    <div class="ft-col">
+      <h4 data-en="Menu" data-ar="القائمة">Menu</h4>
+      <ul>
+        <li><a href="#flavors" data-en="Pizza Flavors" data-ar="نكهات البيتزا">Pizza Flavors</a></li>
+        <li><a href="#menu" data-en="Pasta" data-ar="باستا">Pasta</a></li>
+        <li><a href="#menu" data-en="Starters" data-ar="مقبلات">Starters</a></li>
+        <li><a href="#menu" data-en="Desserts" data-ar="حلويات">Desserts</a></li>
+        <li><a href="#offers" data-en="Today's Offers" data-ar="عروض اليوم">Today's Offers</a></li>
+      </ul>
+    </div>
+    <div class="ft-col">
+      <h4 data-en="Visit" data-ar="زيارة">Visit</h4>
+      <ul>
+        <li><a href="#gallery" data-en="Gallery" data-ar="معرض الصور">Gallery</a></li>
+        <li><a href="#about" data-en="About Us" data-ar="عن المطعم">About Us</a></li>
+        <li><a href="#reviews" data-en="Reviews" data-ar="التقييمات">Reviews</a></li>
+        <li><a href="#map-sec" data-en="Location" data-ar="الموقع">Location</a></li>
+        <li><a href="#contact" data-en="Contact" data-ar="تواصل معنا">Contact</a></li>
+      </ul>
+    </div>
+    <div class="ft-col">
+      <h4 data-en="Legal" data-ar="قانوني">Legal</h4>
+      <ul>
+        <li><a href="#" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a></li>
+        <li><a href="#" data-en="Terms of Service" data-ar="شروط الخدمة">Terms of Service</a></li>
+        <li><a href="#" data-en="Allergens" data-ar="مسببات الحساسية">Allergens</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="ft-bot">
+    <p data-en="© 2026 Pizzeria. All rights reserved." data-ar="© ٢٠٢٦ بيتزيريا. جميع الحقوق محفوظة.">© 2026 Pizzeria. All rights reserved.</p>
+    <p data-en="Made with ❤️ and 🍕" data-ar="صُنع بـ ❤️ و 🍕">Made with ❤️ and 🍕</p>
+  </div>
+</footer>
+
+<script src="pizzeria.js" defer></script>
+</html>
